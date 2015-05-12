@@ -1,0 +1,1 @@
+cmd_/home/ahmed/Git/spy-syscall/spy-module/spys.ko := ld -r -m elf_x86_64 -T /home/ahmed/Downloads/linux-3.13.11/scripts/module-common.lds --build-id  -o /home/ahmed/Git/spy-syscall/spy-module/spys.ko /home/ahmed/Git/spy-syscall/spy-module/spys.o /home/ahmed/Git/spy-syscall/spy-module/spys.mod.o

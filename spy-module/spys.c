@@ -31,7 +31,7 @@ static int __init spys_init(void){
 	int i, socket_error, num_sockets;
 	struct path files_path;
 	char *cwd;
-	char *buf = (char *)kmalloc(GFP_KERNEL, 100 * sizeof(char));
+	char *buf = (char *)kmalloc(100 * sizeof(char), GFP_KERNEL);
 	struct spy_struct result;
 	
 

@@ -16,14 +16,14 @@
 #define MAX_PROCESS_NAME 64
 
 struct spy_struct{
-	int pid;
+	long pid;
 	char process_name[MAX_PROCESS_NAME];
-	int number_of_ports;
+	long number_of_ports;
 };
 
 
-static int num_proc = 0;
-module_param(num_proc, int,  S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+static long num_proc = 0;
+module_param(num_proc, long,  S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(num_proc, "Number of processes to query");
 
 
@@ -37,12 +37,13 @@ static int __init spy_init(void){
 	struct fdtable *files_table;
 	struct task_struct *task;
 	struct socket *sock;
-	int i, socket_error, num_sockets;
+	int socket_error;
+	long i, num_sockets;
 	struct path files_path;
 	char *cwd;
 	struct spy_struct *spys = (struct spy_struct *) kmalloc(num_proc * sizeof(struct spy_struct), GFP_KERNEL);
 	char *buf = (char *)kmalloc(100 * sizeof(char), GFP_KERNEL);
-	int p_count = 0;
+	long p_count = 0;
 
 	printk("Spy start!");
 	if (num_proc > 0)
@@ -66,7 +67,10 @@ static int __init spy_init(void){
 					if(S_ISSOCK(files_table->fd[i]->f_path.dentry->d_inode->i_mode)){
 						sock = sock_from_file(files_table->fd[i], &socket_error);
 						if(!socket_error){
-							num_sockets++;
+							if(sock->type == SOCK_STREAM)
+								num_sockets++;
+							else
+								printk("%s S: %d\n", task->comm, sock->type);
 						}
 					}				
 					i++;
@@ -84,10 +88,10 @@ static int __init spy_init(void){
 
 
 	for(i = 0; i < p_count; i++){
-		printk(KERN_ALERT "Process %s(%d) is listening to %d communication port(s)\n", spys[i].process_name, spys[i].pid, spys[i].number_of_ports);
+		printk(KERN_ALERT "Process %s(%ld) is listening to %ld communication port(s)\n", spys[i].process_name, spys[i].pid, spys[i].number_of_ports);
 	}
 
-	printk(KERN_ALERT "Stated %d listening processes", p_count);
+	printk(KERN_ALERT "Stated %ld listening processes", p_count);
 
 	kfree(spys);
 

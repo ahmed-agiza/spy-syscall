@@ -1,2 +1,2 @@
-/home/ahmed/Documents/Git/spy-syscall/spy-module/spys.ko
-/home/ahmed/Documents/Git/spy-syscall/spy-module/spys.o
+/home/ahmed/Git/spy-syscall/spy-module/spys.ko
+/home/ahmed/Git/spy-syscall/spy-module/spys.o

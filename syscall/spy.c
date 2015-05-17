@@ -1,14 +1,12 @@
 #include <linux/kernel.h>
 #include <linux/printk.h>
 #include <linux/sched.h>
-#include <linux/linkage.h>   
-#include <linux/init.h>      
 #include <linux/fdtable.h>
+#include <linux/linkage.h>   
 #include <linux/fs.h>
 #include <linux/slab.h>
 #include <linux/dcache.h>
 #include <linux/net.h>
-#include <net/sock.h>
 #include <asm/uaccess.h>
 
 #define MAX_PROCESS_NAME 64
@@ -20,38 +18,29 @@ struct spy_struct{
 };
 
 asmlinkage long sys_spy(struct spy_struct __user *spy_buf, long num_proc){
-	struct files_struct *task_files;
-	struct fdtable *files_table;
 	struct task_struct *task;
 	struct socket *sock;
 	long i, num_sockets, p_count = 0;
 	int socket_error = 0;
-	struct path files_path;
-	char *cwd;
 	struct spy_struct *spys = (struct spy_struct *) kmalloc(num_proc * sizeof(struct spy_struct), GFP_KERNEL);
-	char *buf = (char *)kmalloc(100 * sizeof(char), GFP_KERNEL);
 
-	printk("Spy start!");
+	printk("Spy start!\n");
 	if (num_proc > 0)
 		for_each_process(task){
 
 			if(p_count >= num_proc){
-				printk(KERN_ALERT "Reached maximum number of queries.");
+				printk(KERN_ALERT "Reached maximum number of queries.\n");
 				break;
 			}
 
 			if(task != NULL){
-				task_files = task->files;
-				files_table = files_fdtable(task_files);
 				num_sockets = 0;
 				i = 0;
 				socket_error = 0;
 
-				while(files_table->fd[i] != NULL) {
-					files_path = files_table->fd[i]->f_path;
-					cwd = d_path(&files_path, buf, 100 * sizeof(char));
-					if(S_ISSOCK(files_table->fd[i]->f_path.dentry->d_inode->i_mode)){
-						sock = sock_from_file(files_table->fd[i], &socket_error);
+				while(task->files->fd_array[i] != NULL) {
+					if(S_ISSOCK(task->files->fd_array[i]->f_inode->i_mode)){
+						sock = sock_from_file(task->files->fd_array[i], &socket_error);
 						if(!socket_error && sock->type == SOCK_STREAM){
 							num_sockets++;
 						}
@@ -71,10 +60,10 @@ asmlinkage long sys_spy(struct spy_struct __user *spy_buf, long num_proc){
 
 
 	for(i = 0; i < p_count; i++){
-		printk(KERN_ALERT "Process %s(%ld) is listening to %ld communication port(s)\n", spys[i].process_name, spys[i].pid, spys[i].number_of_ports);
+		printk(KERN_ALERT "Process %s(%ld) is listening to %ld communication port(s).\n", spys[i].process_name, spys[i].pid, spys[i].number_of_ports);
 	}
 
-	printk(KERN_ALERT "Stated %ld listening processes", p_count);
+	printk(KERN_ALERT "Stated %ld listening processes.\n", p_count);
 
 	if(access_ok(VERIFY_WRITE, spy_buf, num_proc * sizeof(struct spy_struct))){
 		if(!copy_to_user(spy_buf, spys, num_proc * sizeof(struct spy_struct))){
@@ -93,3 +82,4 @@ asmlinkage long sys_spy(struct spy_struct __user *spy_buf, long num_proc){
 	kfree(spys);
 	return p_count;
 }
+
